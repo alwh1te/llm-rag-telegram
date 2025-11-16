@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.rag import answer_question, answer_question_direct
+from rag import answer_question, answer_question_direct
 
 logging.basicConfig(
     level=logging.INFO,
@@ -113,7 +113,7 @@ async def telegram_webhook(update: dict):
     try:
         logger.info(f"Processing question from chat {chat_id}: {user_text}")
         send_message(chat_id, "Ищу ответ...")
-        
+
         try:
             result = answer_question(user_text, k=3)
             answer = result["answer"]

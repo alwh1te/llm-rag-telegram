@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -12,8 +12,10 @@ load_dotenv()
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 FAISS_DIR = os.getenv("FAISS_INDEX_DIR", "faiss_index")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
-OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.0"))
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_BASE_MODEL = os.getenv("OLLAMA_BASE_MODEL", "")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", OLLAMA_BASE_MODEL)
+OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.0"))
 
 def load_retriever(k: int = 3):
     if not os.path.exists(FAISS_DIR):
@@ -31,7 +33,11 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 def create_qa_chain(retriever):
-    llm = ChatOpenAI(model=OPENAI_MODEL, temperature=OPENAI_TEMPERATURE)
+    llm = ChatOllama(
+        model=OLLAMA_MODEL,
+        base_url=OLLAMA_BASE_URL,
+        temperature=OLLAMA_TEMPERATURE
+    )
     
     template = """You are a helpful assistant that answers questions based on provided documents.
 
@@ -65,14 +71,18 @@ def answer_question(question: str, k: int = 3):
     
     answer = qa_chain.invoke(question)
     
-    source_docs = retriever_obj.get_relevant_documents(question)
+    source_docs = retriever_obj.invoke(question)
     srcs = [{"page_content": doc.page_content[:300], "metadata": doc.metadata} for doc in source_docs]
     
     return {"answer": answer, "sources": srcs}
 
 
 def answer_question_direct(question: str, temperature: float = 0.7):
-    llm = ChatOpenAI(model=OPENAI_MODEL, temperature=temperature)
+    llm = ChatOllama(
+        model=OLLAMA_MODEL,
+        base_url=OLLAMA_BASE_URL,
+        temperature=temperature
+    )
     
     template = """You are a friendly and helpful AI assistant.
 Answer the user's questions clearly, informatively, and politely.

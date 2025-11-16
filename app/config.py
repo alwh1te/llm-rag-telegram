@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     webhook_path: str = "/telegram/webhook"
     base_url: str = ""
     
-    openai_api_key: str = ""
-    openai_model: str = "gpt-3.5-turbo"
-    openai_temperature: float = 0.0
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.2"
+    ollama_temperature: float = 0.0
     
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     
